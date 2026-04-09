@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+                  |-----handy-ruler------------------------------------------------------|
+intel-opencl-clang: intel-opencl-clang (Intel OpenCL Clang wrapper)
+intel-opencl-clang:
+intel-opencl-clang: Intel OpenCL Clang is a wrapper around the LLVM/Clang library
+intel-opencl-clang: specifically designed to provide an interface for compiling
+intel-opencl-clang: OpenCL C kernels into SPIR-V.
+intel-opencl-clang:
+intel-opencl-clang: It is a mandatory dependency for the Intel Graphics Compiler (IGC)
+intel-opencl-clang: and the Intel Compute Runtime (NEO) stack.
+intel-opencl-clang:
+intel-opencl-clang: https://github.com/intel/opencl-clang
+intel-opencl-clang:

@@ -1,0 +1,12 @@
+Intel(R) OpenCL(TM) Clang
+
+intel-opencl-clang is a thin wrapper around the Clang library. 
+It provides an interface to compile OpenCL C kernels into SPIR-V 
+intermediate representation, which is then consumed by the 
+Intel Graphics Compiler (IGC).
+
+This is a core component of the Intel AI Stack for hardware 
+acceleration on Intel GPUs and is required by the Intel Compute Runtime.
+
+Note: This package must be built against the same version of 
+LLVM/Clang available in the system.
