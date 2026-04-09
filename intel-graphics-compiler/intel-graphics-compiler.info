@@ -1,0 +1,22 @@
+PRGNAM="intel-graphics-compiler"
+VERSION="2.30.1"
+HOMEPAGE="https://github.com/intel/intel-graphics-compiler/"
+DOWNLOAD="https://github.com/intel/intel-graphics-compiler/archive/v2.30.1/intel-graphics-compiler-2.30.1.tar.gz \
+    https://github.com/intel/vc-intrinsics/archive/v0.25.0/vc-intrinsics-0.25.0.tar.gz \
+    https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/de396f26ade6b0ac1f0f367b741dd5c78a76a2d9/SPIRV-LLVM-Translator-de396f26ade6b0ac1f0f367b741dd5c78a76a2d9.tar.gz \
+    https://github.com/KhronosGroup/SPIRV-Tools/archive/28a883ba4c67f58a9540fb0651c647bb02883622/SPIRV-Tools-28a883ba4c67f58a9540fb0651c647bb02883622.tar.gz \
+    https://github.com/KhronosGroup/SPIRV-Headers/archive/9268f3057354a2cb65991ba5f38b16d81e803692/SPIRV-Headers-9268f3057354a2cb65991ba5f38b16d81e803692.tar.gz \
+    https://github.com/intel/opencl-clang/archive/7161d7c6d97da80f12739cebad9bf508555bbfd9/opencl-clang-7161d7c6d97da80f12739cebad9bf508555bbfd9.tar.gz \
+    https://github.com/llvm/llvm-project/archive/llvmorg-16.0.6/llvm-project-llvmorg-16.0.6.tar.gz"
+MD5SUM="2227cf96a2d04c185e8861ba5187fee0 \
+        bfc82b3a6277982e7eaf7a1abbefb1fe \
+        44b2e567a067940832e989751082194c \
+        3887e9a8820b3673f03d0c7985f00ec4 \
+        cab3b542d97fa16e614a31a3f840a219 \
+        79234c1551a82b984f894528b9834acf \
+        2a26ad101fd9b40c6ed1bcd2e6a7e0b6"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES="gmmlib"
+MAINTAINER="danix"
+EMAIL="danix@danix.xyz"

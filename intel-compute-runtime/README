@@ -1,0 +1,15 @@
+Intel Graphics Compute Runtime (NEO) is the OpenCL and Level Zero
+driver for Intel graphics hardware, including Intel Arc discrete
+GPUs. It provides the runtime components needed to execute compute
+workloads on Intel GPUs via OpenCL or the oneAPI Level Zero API.
+
+Required dependencies: gmmlib, intel-graphics-compiler.
+
+Optional dependencies not covered by this build:
+  igsc: discrete GPU firmware enumeration via Level Zero
+  libva: cl_intel_va_api_media_sharing OpenCL extension
+  libdrm: cl_intel_va_api_media_sharing OpenCL extension
+
+After installation, the OpenCL ICD is registered automatically
+at /etc/OpenCL/vendors/intel.icd. No additional configuration
+is required to use Intel GPU OpenCL.

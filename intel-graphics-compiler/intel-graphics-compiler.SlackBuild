@@ -1,0 +1,218 @@
+#!/bin/bash
+
+# Slackware build script for intel-graphics-compiler
+
+# Copyright 2026 danix <danix@danix.xyz>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=intel-graphics-compiler
+VERSION=${VERSION:-2.30.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+# Pinned dependency versions — do not change without testing
+LLVMVER=16.0.6
+VCIVER=0.25.0
+SPIRV_LLVM_COMMIT=de396f26ade6b0ac1f0f367b741dd5c78a76a2d9
+SPIRV_TOOLS_COMMIT=28a883ba4c67f58a9540fb0651c647bb02883622
+SPIRV_HEADERS_COMMIT=9268f3057354a2cb65991ba5f38b16d81e803692
+OPENCL_CLANG_COMMIT=7161d7c6d97da80f12739cebad9bf508555bbfd9
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+# LLVM compilation is memory-intensive (~1.5GB/job for linking).
+# With 8GB RAM, cap at 4 parallel jobs to avoid OOM.
+# Override with: MAKEFLAGS="-j8" ./intel-graphics-compiler.SlackBuild
+MAKEFLAGS=${MAKEFLAGS:--j4}
+export MAKEFLAGS
+
+# Limit linker parallelism specifically — linking LLVM is the main OOM culprit
+export LDFLAGS="$LDFLAGS -Wl,--no-keep-memory"
+
+set -ex
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+mv $PRGNAM-$VERSION src-$PRGNAM  # keep a clean name for the build dir
+
+mkdir -p $TMP/$PRGNAM-$VERSION
+cd $TMP/$PRGNAM-$VERSION
+
+# Extract all dependency sources
+tar xvf $CWD/vc-intrinsics-${VCIVER}.tar.gz
+tar xvf $CWD/SPIRV-LLVM-Translator-${SPIRV_LLVM_COMMIT}.tar.gz
+tar xvf $CWD/SPIRV-Tools-${SPIRV_TOOLS_COMMIT}.tar.gz
+tar xvf $CWD/SPIRV-Headers-${SPIRV_HEADERS_COMMIT}.tar.gz
+tar xvf $CWD/opencl-clang-${OPENCL_CLANG_COMMIT}.tar.gz
+tar xvf $CWD/llvm-project-llvmorg-${LLVMVER}.tar.gz
+
+# Rename SPIRV-LLVM-Translator to prevent it from being included twice
+# by the build process (would cause build failure)
+mv SPIRV-LLVM-Translator-${SPIRV_LLVM_COMMIT} SPIRV-LLVM-Translator-IGC-LLVM
+
+# Wire up opencl-clang and SPIRV-LLVM-Translator into llvm-project
+ln -s $TMP/$PRGNAM-$VERSION/SPIRV-LLVM-Translator-IGC-LLVM \
+      $TMP/$PRGNAM-$VERSION/llvm-project-llvmorg-${LLVMVER}/llvm/projects/llvm-spirv
+ln -s $TMP/$PRGNAM-$VERSION/opencl-clang-${OPENCL_CLANG_COMMIT} \
+      $TMP/$PRGNAM-$VERSION/llvm-project-llvmorg-${LLVMVER}/llvm/projects/opencl-clang
+
+# Move IGC source into place
+mv $TMP/src-$PRGNAM $TMP/$PRGNAM-$VERSION/$PRGNAM-$VERSION
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+# Apply patch
+patch -d $PRGNAM-$VERSION -Np1 -i $CWD/010-intel-graphics-compiler-disable-werror.patch
+
+# Fix cmake -E copy_directory broken in CMake 4.x:
+# replace execute_process cmake copy with cp -r via sed
+# Fix cmake -E copy_directory broken in CMake 4.x
+# copy_directory_if_different works correctly in both CMake 3.x and 4.x
+sed -i 's|-E copy_directory ${IGC_OPTION__CLANG_SOURCES_DIR}|-E copy_directory_if_different ${IGC_OPTION__CLANG_SOURCES_DIR}|' \
+  $PRGNAM-$VERSION/external/llvm/llvm_clang_source_hook.cmake
+
+sed -i 's|-E copy_directory ${IGC_OPTION__lld_SOURCES_DIR}|-E copy_directory_if_different ${IGC_OPTION__lld_SOURCES_DIR}|' \
+  $PRGNAM-$VERSION/external/llvm/llvm_lld_source_hook.cmake
+
+# IGC's cmake files use hardcoded relative paths to find dependencies.
+# Create symlinks with the exact expected names.
+ln -sf $TMP/$PRGNAM-$VERSION/llvm-project-llvmorg-${LLVMVER} \
+  $TMP/$PRGNAM-$VERSION/llvm-project_${LLVMVER}
+ln -sf $TMP/$PRGNAM-$VERSION/SPIRV-Tools-${SPIRV_TOOLS_COMMIT} \
+  $TMP/$PRGNAM-$VERSION/SPIRV-Tools
+ln -sf $TMP/$PRGNAM-$VERSION/SPIRV-Headers-${SPIRV_HEADERS_COMMIT} \
+  $TMP/$PRGNAM-$VERSION/SPIRV-Headers
+ln -sf $TMP/$PRGNAM-$VERSION/vc-intrinsics-${VCIVER} \
+  $TMP/$PRGNAM-$VERSION/vc-intrinsics
+
+# Also create the stub for the mach-o header in the symlinked path
+mkdir -p $TMP/$PRGNAM-$VERSION/llvm-project-llvmorg-${LLVMVER}/libunwind/include/mach-o
+touch $TMP/$PRGNAM-$VERSION/llvm-project-llvmorg-${LLVMVER}/libunwind/include/mach-o/compact_unwind_encoding.h
+
+# Prevent IGC from loading LLVM 17+ symbols
+export CFLAGS="$SLKCFLAGS -fno-semantic-interposition"
+export CXXFLAGS="$SLKCFLAGS -fno-semantic-interposition"
+export LDFLAGS="-Wl,-Bsymbolic"
+
+# Needed by git operations during build even without a real repo
+export GIT_COMMITTER_NAME='builduser'
+export GIT_COMMITTER_EMAIL='builduser@slackware'
+
+# IGC's internal cmake sub-invocations need this to work with CMake 4.x
+export CMAKE_FLAGS="-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+
+mkdir -p build
+cd build
+  cmake ../$PRGNAM-$VERSION \
+    -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+    -DCMAKE_SKIP_RPATH=YES \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5.0 \
+    -DCCLANG_FROM_SYSTEM=OFF \
+    -DIGC_OPTION__CLANG_MODE=Source \
+    -DIGC_OPTION__LINK_KHRONOS_SPIRV_TRANSLATOR=ON \
+    -DIGC_OPTION__LLD_MODE=Source \
+    -DIGC_OPTION__LLVM_MODE=Source \
+    -DIGC_OPTION__LLVM_PREFERRED_VERSION="${LLVMVER}" \
+    -DIGC_OPTION__SPIRV_TOOLS_MODE=Source \
+    -DIGC_OPTION__USE_PREINSTALLED_SPIRV_HEADERS=OFF \
+    -DIGC_OPTION__VC_INTRINSICS_MODE=Source \
+    -DLLVM_ENABLE_PROJECTS="clang;lld" \
+    -DLLVM_EXTERNAL_OPENCL_CLANG_SOURCE_DIR=$TMP/$PRGNAM-$VERSION/llvm-project-llvmorg-${LLVMVER}/llvm/projects/opencl-clang \
+    -DLLVM_EXTERNAL_LLVM_SPIRV_SOURCE_DIR=$TMP/$PRGNAM-$VERSION/llvm-project-llvmorg-${LLVMVER}/llvm/projects/llvm-spirv \
+    -DIGC_OPTION__VC_INTRINSICS_SOURCE_DIR=$TMP/$PRGNAM-$VERSION/vc-intrinsics \
+    -DIGC_OPTION__SPIRV_TOOLS_SOURCE_DIR=$TMP/$PRGNAM-$VERSION/SPIRV-Tools \
+    -DIGC_OPTION__SPIRV_HEADERS_SOURCE_DIR=$TMP/$PRGNAM-$VERSION/SPIRV-Headers \
+    -DIGC_OPTION__LLVM_SOURCES_DIR=$TMP/$PRGNAM-$VERSION/llvm-project_${LLVMVER} \
+    -DLLVM_PARALLEL_LINK_JOBS=2 \
+    -Wno-dev
+  make
+  make install DESTDIR=$PKG
+cd ..
+
+rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+# Rearrange headers as upstream expects
+mv $PKG/usr/include/opencl-c{,-base}.h $PKG/usr/include/igc/ || true
+
+# Move NOTICES into licenses
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+mv $PKG/usr/lib${LIBDIRSUFFIX}/igc${VERSION%%.*}/NOTICES.txt \
+   $PKG/usr/doc/$PRGNAM-$VERSION/ || true
+
+# opencl-clang extras
+install -D -m644 $TMP/$PRGNAM-$VERSION/opencl-clang-${OPENCL_CLANG_COMMIT}/opencl_clang.h \
+  $PKG/usr/include/cclang/opencl_clang.h
+install -D -m644 $TMP/$PRGNAM-$VERSION/opencl-clang-${OPENCL_CLANG_COMMIT}/LICENSE \
+  $PKG/usr/doc/$PRGNAM-$VERSION/LICENSE-opencl-clang
+
+# libopencl-clang compat symlink
+ln -s libopencl-clang.so.${LLVMVER%%.*} \
+  $PKG/usr/lib${LIBDIRSUFFIX}/libopencl-clang.so || true
+
+cp -a $TMP/$PRGNAM-$VERSION/$PRGNAM-$VERSION/LICENSE.md \
+  $PKG/usr/doc/$PRGNAM-$VERSION/
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

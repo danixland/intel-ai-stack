@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+                       |-----handy-ruler------------------------------------------------------|
+intel-graphics-compiler: intel-graphics-compiler (Intel Graphics Compiler for OpenCL)
+intel-graphics-compiler:
+intel-graphics-compiler: IGC is an LLVM-based compiler for OpenCL and compute shaders
+intel-graphics-compiler: targeting Intel graphics hardware, including Intel Arc discrete
+intel-graphics-compiler: GPUs. It is a required runtime dependency of intel-compute-runtime
+intel-graphics-compiler: (NEO), the OpenCL and Level Zero driver stack.
+intel-graphics-compiler:
+intel-graphics-compiler: This package bundles LLVM 16, SPIRV-Tools, SPIRV-Headers,
+intel-graphics-compiler: SPIRV-LLVM-Translator, vc-intrinsics, and opencl-clang at the
+intel-graphics-compiler: versions required by IGC.
+intel-graphics-compiler: https://github.com/intel/intel-graphics-compiler/

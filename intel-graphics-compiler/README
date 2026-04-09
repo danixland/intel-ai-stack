@@ -1,0 +1,16 @@
+Intel Graphics Compiler (IGC) is an LLVM-based compiler for OpenCL
+and compute shaders targeting Intel graphics hardware, including
+Intel Arc discrete GPUs. It is a required runtime dependency of
+intel-compute-runtime (NEO), the OpenCL and Level Zero driver.
+
+This build bundles its own copies of LLVM 16, SPIRV-Tools,
+SPIRV-Headers, SPIRV-LLVM-Translator, vc-intrinsics, and
+opencl-clang at the versions required by IGC. Do not attempt to
+substitute system versions of these components.
+
+Due to the bundled LLVM compilation, this build requires significant
+resources: allow at least 10GB of free disk space and 8GB of RAM.
+Build time may exceed one hour depending on hardware.
+
+All source tarballs listed in intel-graphics-compiler.info must be
+downloaded and placed in the SlackBuild directory before building.

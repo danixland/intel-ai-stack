@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+                     |-----handy-ruler------------------------------------------------------|
+intel-compute-runtime: intel-compute-runtime (Intel Graphics Compute Runtime)
+intel-compute-runtime:
+intel-compute-runtime: NEO is the OpenCL and Level Zero driver for Intel graphics
+intel-compute-runtime: hardware, including Intel Arc discrete GPUs. It provides the
+intel-compute-runtime: runtime components needed to execute compute workloads on
+intel-compute-runtime: Intel GPUs via OpenCL or the oneAPI Level Zero API.
+intel-compute-runtime:
+intel-compute-runtime: After installation, the OpenCL ICD is registered at
+intel-compute-runtime: /etc/OpenCL/vendors/intel.icd.
+intel-compute-runtime:
+intel-compute-runtime: https://github.com/intel/compute-runtime/
